@@ -1,0 +1,4 @@
+name = "RouquierBlocks"
+uuid = "c4af237a-41a4-492d-8061-0a4e93bc3466"
+authors = ["Jean Michel <jean.michel@imj-prg.fr>"]
+version = "0.1.0"
