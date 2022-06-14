@@ -1,9 +1,7 @@
 
-<a id='Puiseux-polynomials'></a>
+<a id='RouquierBlocks'></a>
 
-<a id='Puiseux-polynomials-1'></a>
-
-# Puiseux polynomials
+# Rouquier Blocks
 
 <a id='RouquierBlocks' href='#RouquierBlocks'>#</a>
 **`RouquierBlocks`** &mdash; *Module*.
