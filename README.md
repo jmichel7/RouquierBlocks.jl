@@ -1,14 +1,7 @@
 
-<a id='RouquierBlocks'></a>
+# RouquierBlocks.jl
 
-# Rouquier Blocks
-
-<a id='RouquierBlocks' href='#RouquierBlocks'>#</a>
-**`RouquierBlocks`** &mdash; *Module*.
-
-
-
-translated from gap3. © July 2015 –- Maria Chlouveraki for the mathematics,                 Maria Chlouveraki and Jean Michel for the code
+Translated from GAP3. © July 2015 — Maria Chlouveraki for the mathematics, Maria Chlouveraki and Jean Michel for the code.
 
 A  1-cyclotomic Hecke  algebra for  the complex  reflection group `W` is an Hecke algebra `H` whose `j`-th parameter for the `i`-th generator (of order `e`)  of `W` is of the form  `ζₑʲ x^mᵢ,ⱼ` for some rational numbers `mᵢ,ⱼ`; thus such an algebra specializes to the group algebra for x->1.
 
@@ -35,4 +28,3 @@ returns  a list of [essential hyperplane h, corresponding h-blocks] for the comp
 `h`  is represented  as a  list of  integers of  same length as the list of parameters  for  the  Hecke  algebra  of  `W`. `h`-blocks is a partition of `1:nconjugacy_classes(W)`.
 
 The  first entry in the result list has `h=[0,...,0]` and the corresponding `h`-blocks are the `0`-blocks.
-
