@@ -22,7 +22,7 @@ where  the `mᵢ,ⱼ`  annihilate no  hyperplane we  get the 0-blocks.
 """
 module RouquierBlocks
 using Gapjm
-export rouquier_blocks, RouquierBlockData
+export rouquier_blocks, RouquierBlockData, GenericSchurElements
 
 # largest v∈ ℤ such that p^-v c is a p-algebraic integer.
 function LaurentPolynomials.valuation(c::Cyc,p::Integer)
@@ -59,9 +59,9 @@ function GenericSchurElements(W)
       res[map(x->findfirst(==(x),vnames),collect(variables(mon)))]=collect(powers(mon))
       res
     end
-    res=(vars=Mvp.(vnames),vcyc=map(p->(pol=p.pol, 
+    res=(vars=Mvp.(vnames),vcyc=map(p->(pol=p.pol,
       mon=montovec(p.monomial),
-      coeff=first(coefficients(p.monomial))),s.vcyc), 
+      coeff=first(coefficients(p.monomial))),s.vcyc),
       coeff=first(coefficients(s.factor)), mon=montovec(s.factor))
     sort!(res.vcyc, by=x->[x.pol, x.mon, x.coeff])
     res
@@ -116,7 +116,7 @@ function RouquierBlockData(W)
     res=map(collect(keys(factor(length(W)))))do p
       local bl, vp, j, x, i, cut
       bl=gcd_partitions(blocks(W,p),aA)
-# here bl holds the coarsest partition 
+# here bl holds the coarsest partition
 # - finer than the p-blocks of W
 # - finer than the (a+A)-blocks
       if h==[1,-1] return bl end # for 1-parameter algebras bl is h-blocks
@@ -139,7 +139,7 @@ function RouquierBlockData(W)
           end
         end
 # a pseudo-block of size <=3 is a block
-        if length(bl[i])<=3 
+        if length(bl[i])<=3
           i+=1
           continue
         end
@@ -157,7 +157,7 @@ function RouquierBlockData(W)
           i+=1
           continue
         end
-# We cut the remaining pseudo-blocks in p-blocks by ultimate test 
+# We cut the remaining pseudo-blocks in p-blocks by ultimate test
 # ∑_{φ\in bl}φ(T)/s_φ p-integral
         function cut(bl, para)
           local csch, lsch, p0, ct, ch, msch, l, Ah, getH
@@ -191,7 +191,7 @@ function RouquierBlockData(W)
           for ch in eachrow(ct)
             InfoChevie(".")
             msch = lsch.*ch
-            l=filter(x->valuation(sum(msch[x]),p)>=0, 
+            l=filter(x->valuation(sum(msch[x]),p)>=0,
              filter(!isempty,map(x->sort(unique(vcat(x...))),combinations(p0))))
             if !(1:length(bl) in l) error("theory",l,1:length(bl)) end
             l=filter(x->count(y->issubset(y,x),l)==1,l)
@@ -201,7 +201,7 @@ function RouquierBlockData(W)
               return [bl]
             end
           end
-# here bl has been non-trivially cut 
+# here bl has been non-trivially cut
 #         InfoChevie(Stime(),"\n  ->",FormatGAP(map(x->bl[x],p0)),"\n")
           return map(x->bl[x],p0)
         end
