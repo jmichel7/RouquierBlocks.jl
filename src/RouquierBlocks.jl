@@ -22,7 +22,7 @@ where  the `mᵢ,ⱼ`  annihilate no  hyperplane we  get the 0-blocks.
 """
 module RouquierBlocks
 using Gapjm
-export rouquier_blocks, RouquierBlockData, GenericSchurElements
+export rouquier_blocks, rouquier_blocks, generic_schur_elements
 
 # largest v∈ ℤ such that p^-v c is a p-algebraic integer.
 function LaurentPolynomials.valuation(c::Cyc,p::Integer)
@@ -33,7 +33,9 @@ end
 LaurentPolynomials.valuation(c::Mvp,p::Integer)=minimum(valuation.(coefficients(c),p))
 
 """
-GenericSchurElements(W)  returns  the  Schur  elements for Hecke(W) with
+    function generic_schur_elements(W::ComplexReflectionGroup)
+
+generic_schur_elements(W)  returns  the  Schur  elements for Hecke(W) with
 parameters  ζₑⁱ xⱼ,ᵢ (a variant of  the generic algebra which specializes
 to  the group  algebra for  xᵢ,ⱼ->1). The  result is  a named  tuple with
 fields  .coeff, .mon representing the leading monomial, and a field .vcyc
@@ -41,7 +43,7 @@ which  is a list  of namedtuples with  fields .coeff, .mon representing a
 monomial  m  and  a  field  .pol  holding  a  cycpol such that the record
 represents pol(m)
 """
-function GenericSchurElements(W)
+function generic_schur_elements(W::ComplexReflectionGroup)
   vars="xyz"
   v=map(eachindex(gens(W)))do i
     var=vars[simple_reps(W)[i]]
@@ -69,7 +71,7 @@ function GenericSchurElements(W)
 end
 
 """
-`RouquierBlockData(W)`
+    function rouquier_blocks(W::ComplexReflectionGroup)
 
 returns  a list of [essential hyperplane h, corresponding h-blocks] for the
 complex reflection group `W`.
@@ -81,10 +83,10 @@ parameters  for  the  Hecke  algebra  of  `W`. `h`-blocks is a partition of
 The  first entry in the result list has `h=[0,...,0]` and the corresponding
 `h`-blocks are the `0`-blocks.
 """
-function RouquierBlockData(W)
+function rouquier_blocks(W::ComplexReflectionGroup)
   bl0=nothing
   NRPARA=5 # how many random algebras A_h to consider
-  sch=GenericSchurElements(W)
+  sch=generic_schur_elements(W)
   hplanes=vcat(map(x->map(y->y.mon,x.vcyc),sch)...)
   hplanes=map(v->Int.(v*lcm(denominator.(v))),hplanes)
   hplanes=unique(map(v->div.(v,gcd(numerator.(v))),hplanes))
@@ -221,12 +223,14 @@ function RouquierBlockData(W)
 end
 
 """
+    function rouquier_blocks(H::HeckeAlgbra)
+
 The  Rouquier blocks  of a  1-cyclotomic algebra  H is the finest partition
 coarser than h-blocks for all hyperplanes h annihilated by H's parameters.
 """
-function rouquier_blocks(H)
+function rouquier_blocks(H::HeckeAlgbra)
   W=H.W
-  d=RouquierBlockData(W)
+  d=rouquier_blocks(W)
   p=vcat(H.para[sort(unique(simple_reps(W)))]...)
   d=filter(x->!isnothing(scalar(prod(p.^(x[1]*lcm(denominator.(x[1])))))),d)
   lcm_partitions(map(x->x[2],d)...)
