@@ -183,8 +183,9 @@ function rouquier_blocks(W::ComplexReflectionGroup ; names=false, namesargs...)
           l=toM(vcat(map(x->map(y->y.mon,x.vcyc),sch[bl])...))*para
           para*=lcm(denominator.(l))
           Ah=getH(Int.(para))
-          csch=map(s->s.coeff*CycPol(Mvp(:x)^(para*s.mon))*
-                   prod(x->subs(x.pol,Pol()^(para*x.mon)),s.vcyc),sch[bl])
+     #    csch=map(s->s.coeff*CycPol(Mvp(:x)^(para*s.mon))*
+     #             prod(x->subs(x.pol,Pol()^(para*x.mon)),s.vcyc),sch[bl])
+          csch=CycPol.(schur_elements(Ah)[bl])
 # csch holds the Schur elements for characters of Ah in bl
           lsch=lcm(csch).//csch
 #         InfoChevie(" Schur:", Stime())
