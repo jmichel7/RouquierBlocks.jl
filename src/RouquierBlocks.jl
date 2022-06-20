@@ -30,7 +30,10 @@ function LaurentPolynomials.valuation(c::Cyc,p::Integer)
   valuation(prod(e)[0],p)//length(e)
 end
 
-LaurentPolynomials.valuation(c::Mvp,p::Integer)=minimum(valuation.(coefficients(c),p))
+function LaurentPolynomials.valuation(c::Mvp,p::Integer)
+  if iszero(c) return 0 end
+  minimum(valuation.(coefficients(c),p))
+end
 
 """
     function generic_schur_elements(W::ComplexReflectionGroup)
@@ -163,18 +166,22 @@ function rouquier_blocks(W::ComplexReflectionGroup ; names=false, namesargs...)
 # ∑_{φ\in bl}φ(T)/s_φ p-integral
         function cut(bl, para)
           local csch, lsch, p0, ct, ch, msch, l, Ah, getH
-          InfoChevie("#I p==",p," h",findfirst(==(h),hplanes),":",h," cut",bl)
+          InfoChevie("#I p==",p," h",findfirst(==(h),hplanes),":",h," cut",bl,"\n")
           function getH(para)local c, o, v
             c=sort(unique(simple_reps(W)))
-            o=order.(gens(W)[c])
+            o=ordergens(W)[c]
             o=map(i->sum(o[1:i-1])+(1:o[i]),1:length(o))
-            v=fill([Mvp(Cyc(0))],ngens(W))
-            v[c]=map(i->map((x,y)->Mvp(:x)^para[x]*E(length(i),y),i,i-minimum(i)),o)
+            para=map(x->para[x],o)
+            v=map(eachindex(gens(W)))do j
+              pow=para[findfirst(==(simple_reps(W)[j]),c)]
+              o=ordergens(W)[j]
+              map(y->Mvp(:x)^pow[y]*E(o,y-1),1:o)
+            end
             hecke(W, v) # algebra A_h
           end
 # replace para by smallest multiple such that schur elements rational
-          para*=lcm(denominator.(sort(unique(toM(vcat(
-                        map(x->map(y->y.mon,x.vcyc),sch[bl])...))*para))))
+          l=toM(vcat(map(x->map(y->y.mon,x.vcyc),sch[bl])...))*para
+          para*=lcm(denominator.(l))
           Ah=getH(Int.(para))
           csch=map(s->s.coeff*CycPol(Mvp(:x)^(para*s.mon))*
                    prod(x->subs(x.pol,Pol()^(para*x.mon)),s.vcyc),sch[bl])
@@ -193,10 +200,12 @@ function rouquier_blocks(W::ComplexReflectionGroup ; names=false, namesargs...)
           for ch in eachrow(ct)
             InfoChevie(".")
             msch = lsch.*ch
+#           @show Pol.(msch)
             l=filter(x->valuation(sum(msch[x]),p)>=0,
-             filter(!isempty,map(x->sort(unique(vcat(x...))),combinations(p0))))
-            if !(1:length(bl) in l) error("theory",l,1:length(bl)) end
+              filter(!isempty,map(x->sort(vcat(x...)),combinations(p0))))
+            if !(1:length(bl) in l) error("theory ",l,1:length(bl)) end
             l=filter(x->count(y->issubset(y,x),l)==1,l)
+#           @show l, p0
             p0=lcm_partitions(l,p0)
             if length(p0)==1
 #             InfoChevie(Stime(), " ok\n")
