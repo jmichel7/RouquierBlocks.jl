@@ -83,7 +83,7 @@ parameters  for  the  Hecke  algebra  of  `W`. `h`-blocks is a partition of
 The  first entry in the result list has `h=[0,...,0]` and the corresponding
 `h`-blocks are the `0`-blocks.
 """
-function rouquier_blocks(W::ComplexReflectionGroup)
+function rouquier_blocks(W::ComplexReflectionGroup ; names=false, namesargs...)
   bl0=nothing
   NRPARA=5 # how many random algebras A_h to consider
   sch=generic_schur_elements(W)
@@ -217,23 +217,36 @@ function rouquier_blocks(W::ComplexReflectionGroup)
     end
 # The h-blocks is the finest partition coarser than all p-blocks
     res=lcm_partitions(res...)
+
+    #UT: added
+    if names
+        res = [charnames(W;namesargs...)[i] for i in res]
+    end
+
     if iszero(h) bl0=res end
     return [h,res]
   end
 end
 
 """
-    function rouquier_blocks(H::HeckeAlgbra)
+    function rouquier_blocks(H::HeckeAlgebra)
 
 The  Rouquier blocks  of a  1-cyclotomic algebra  H is the finest partition
 coarser than h-blocks for all hyperplanes h annihilated by H's parameters.
 """
-function rouquier_blocks(H::HeckeAlgbra)
+function rouquier_blocks(H::HeckeAlgebra ; names=false, namesargs...)
   W=H.W
   d=rouquier_blocks(W)
   p=vcat(H.para[sort(unique(simple_reps(W)))]...)
   d=filter(x->!isnothing(scalar(prod(p.^(x[1]*lcm(denominator.(x[1])))))),d)
-  lcm_partitions(map(x->x[2],d)...)
+  res = lcm_partitions(map(x->x[2],d)...)
+
+  #UT: added names
+  if names
+      res = [ [charnames(W;namesargs...)[i] for i in bl] for bl in res ]
+  end
+
+  return res
 end
 
-end
+end # of module
