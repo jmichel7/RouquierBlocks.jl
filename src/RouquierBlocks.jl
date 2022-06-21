@@ -26,7 +26,7 @@ export rouquier_blocks, rouquier_blocks, generic_schur_elements
 
 # largest v∈ ℤ such that p^-v c is a p-algebraic integer.
 function LaurentPolynomials.valuation(c::Cyc,p::Integer)
-  e=conjugates(c)
+  e=conjugates(c)*big(1)
   valuation(prod(e)[0],p)//length(e)
 end
 
@@ -48,13 +48,14 @@ represents pol(m)
 """
 function generic_schur_elements(W::ComplexReflectionGroup)
   vars="xyz"
+  c=sort(unique(simple_reps(W)))
   v=map(eachindex(gens(W)))do i
-    var=vars[simple_reps(W)[i]]
+    var=vars[findfirst(==(simple_reps(W)[i]),c)]
     o=ordergens(W)[i]
     map(k->Mvp(Symbol(var,k))*E(o,k), 0:o-1)
   end
   H=hecke(W,v)
-  o=ordergens(W)[sort(unique(simple_reps(W)[eachindex(gens(W))]))]
+  o=ordergens(W)[sort(unique(simple_reps(W,eachindex(gens(W)))))]
   vnames=vcat(map(i->Symbol.(vars[i],0:o[i]-1),1:length(o))...)
   map(FactorizedSchurElements(H))do s
     function montovec(mon)
@@ -183,9 +184,8 @@ function rouquier_blocks(W::ComplexReflectionGroup ; names=false, namesargs...)
           l=toM(vcat(map(x->map(y->y.mon,x.vcyc),sch[bl])...))*para
           para*=lcm(denominator.(l))
           Ah=getH(Int.(para))
-     #    csch=map(s->s.coeff*CycPol(Mvp(:x)^(para*s.mon))*
-     #             prod(x->subs(x.pol,Pol()^(para*x.mon)),s.vcyc),sch[bl])
-          csch=CycPol.(schur_elements(Ah)[bl])
+          csch=map(s->s.coeff*CycPol(Mvp(:x)^(para*s.mon))*
+                   prod(x->subs(x.pol,Pol()^(para*x.mon)),s.vcyc),sch[bl])
 # csch holds the Schur elements for characters of Ah in bl
           lsch=lcm(csch).//csch
 #         InfoChevie(" Schur:", Stime())
