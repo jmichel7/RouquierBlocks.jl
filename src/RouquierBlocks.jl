@@ -35,6 +35,10 @@ function LaurentPolynomials.valuation(c::Mvp,p::Integer)
   minimum(valuation.(coefficients(c),p))
 end
 
+ispInt(c::Cyc,p::Integer)=mod(denominator(c),p)!=0
+ispInt(c::Mvp,p::Integer)=all(x->ispInt(x,p),coefficients(c))
+ispInt(c::Unknown,p::Integer)=true
+
 """
     function generic_schur_elements(W::ComplexReflectionGroup)
 
@@ -202,7 +206,8 @@ function rouquier_blocks(W::ComplexReflectionGroup ; names=false, namesargs...)
             InfoChevie(".")
             msch = lsch.*ch
 #           @show Pol.(msch)
-            l=filter(x->valuation(sum(msch[x]),p)>=0,
+#           l=filter(x->valuation(sum(msch[x]),p)>=0,
+            l=filter(x->ispInt(sum(msch[x]),p),
               filter(!isempty,map(x->sort(vcat(x...)),combinations(p0))))
             if !(1:length(bl) in l) error("theory ",l,1:length(bl)) end
             l=filter(x->count(y->issubset(y,x),l)==1,l)
