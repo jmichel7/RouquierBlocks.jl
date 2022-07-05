@@ -51,22 +51,16 @@ monomial  m  and  a  field  .pol  holding  a  cycpol such that the record
 represents pol(m)
 """
 function generic_schur_elements(W::ComplexReflectionGroup)
-  vars="xyz"
-  c=sort(unique(simple_reps(W)))
-  v=map(eachindex(gens(W)))do i
-    var=vars[findfirst(==(simple_reps(W)[i]),c)]
-    o=ordergens(W)[i]
-    map(k->Mvp(Symbol(var,k))*E(o,k), 0:o-1)
-  end
-  H=hecke(W,v)
-  o=ordergens(W)[sort(unique(simple_reps(W,eachindex(gens(W)))))]
-  vnames=vcat(map(i->Symbol.(vars[i],0:o[i]-1),1:length(o))...)
+  vars="xyz" # for irreducible groups at most 3 orbits
+  hh=hyperplane_orbits(W)
+  vv=[Symbol.(vars[i],0:h.order-1) for (i,h) in enumerate(hh)]
+  H=hecke(W,Tuple(Mvp.(v).*E.(length(v),0:length(v)-1) for v in vv))
+  vnames=vcat(vv...)
   map(FactorizedSchurElements(H))do s
     function montovec(mon)
-      local res
       mon=first(monomials(mon))
       res=map(x->0//1,vnames)
-      res[map(x->findfirst(==(x),vnames),collect(variables(mon)))]=collect(powers(mon))
+      res[indexin(variables(mon),vnames)]=collect(powers(mon))
       res
     end
     res=(vars=Mvp.(vnames),vcyc=map(p->(pol=p.pol,
@@ -172,17 +166,11 @@ function rouquier_blocks(W::ComplexReflectionGroup ; names=false, namesargs...)
         function cut(bl, para)
           local csch, lsch, p0, ct, ch, msch, l, Ah, getH
           InfoChevie("#I p==",p," h",findfirst(==(h),hplanes),":",h," cut",bl,"\n")
-          function getH(para)local c, o, v
-            c=sort(unique(simple_reps(W)))
-            o=ordergens(W)[c]
+          function getH(para)
+            o=map(x->x.order,hyperplane_orbits(W))
             o=map(i->sum(o[1:i-1])+(1:o[i]),1:length(o))
-            para=map(x->para[x],o)
-            v=map(eachindex(gens(W)))do j
-              pow=para[findfirst(==(simple_reps(W)[j]),c)]
-              o=ordergens(W)[j]
-              map(y->Mvp(:x)^pow[y]*E(o,y-1),1:o)
-            end
-            hecke(W, v) # algebra A_h
+            v=map(x->Mvp(:x).^para[x].*E.(length(x),0:length(x)-1),o)
+            hecke(W,Tuple(v)) # algebra A_h
           end
 # replace para by smallest multiple such that schur elements rational
           l=toM(vcat(map(x->map(y->y.mon,x.vcyc),sch[bl])...))*para
