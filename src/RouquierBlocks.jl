@@ -1,4 +1,6 @@
 """
+Computation of *Rouquier blocks* and *essential hyperplanes* of cyclotomic Hecke algebras of complex reflection groups.
+
 translated from gap3.
 © July 2015 --- Maria Chlouveraki for the mathematics,
                 Maria Chlouveraki and Jean Michel for the code
@@ -19,6 +21,70 @@ essential  hyperplane. Let us call `h`-blocks the Rouquier blocks of `A_h`.
 Then  the Rouquier  blocks of  `H` are  the lcm  of the  `h`-blocks for `h`
 running  over the hyperplanes  annihilating the `mᵢ,ⱼ`  of `H`. In the case
 where  the `mᵢ,ⱼ`  annihilate no  hyperplane we  get the 0-blocks.
+
+## Installation
+
+```julia
+julia> using Pkg
+
+julia> Pkg.add(url="https://github.com/jmichel7/RouquierBlocks.jl")
+```
+
+This package requires [Gapjm.jl](https://github.com/jmichel7/Gapjm.jl).
+
+## Usage
+
+```julia-repl
+julia> using RouquierBlocks, Gapjm
+
+julia> W = complex_reflection_group(4)
+G₄
+
+# Essential hyperperplanes and Rouquier blocks
+julia> rouquier_blocks(W ; names=true, limit=true)
+7-element Vector{Vector{Vector}}:
+ [[0, 0, 0], [["φ₁‚₀"], ["φ₁‚₄"], ["φ₁‚₈"], ["φ₂‚₅"], ["φ₂‚₃"], ["φ₂‚₁"], ["φ₃‚₂"]]]
+ [[0, 1, -1], [["φ₁‚₀"], ["φ₁‚₄", "φ₁‚₈", "φ₂‚₅"], ["φ₂‚₃", "φ₂‚₁"], ["φ₃‚₂"]]]
+ [[1, -2, 1], [["φ₁‚₀"], ["φ₁‚₄", "φ₂‚₃", "φ₃‚₂"], ["φ₁‚₈"], ["φ₂‚₅"], ["φ₂‚₁"]]]
+ [[1, -1, 0], [["φ₁‚₀", "φ₁‚₄", "φ₂‚₁"], ["φ₁‚₈"], ["φ₂‚₅", "φ₂‚₃"], ["φ₃‚₂"]]]
+ [[1, 0, -1], [["φ₁‚₀", "φ₁‚₈", "φ₂‚₃"], ["φ₁‚₄"], ["φ₂‚₅", "φ₂‚₁"], ["φ₃‚₂"]]]
+ [[1, 1, -2], [["φ₁‚₀"], ["φ₁‚₄"], ["φ₁‚₈", "φ₂‚₁", "φ₃‚₂"], ["φ₂‚₅"], ["φ₂‚₃"]]]
+ [[2, -1, -1], [["φ₁‚₀", "φ₂‚₅", "φ₃‚₂"], ["φ₁‚₄"], ["φ₁‚₈"], ["φ₂‚₃"], ["φ₂‚₁"]]]
+```
+The  entries in the above list are  pairs of a list giving the coefficients
+of  an essential hyperplane and  a list giving the  Rouquier blocks on this
+hyperplane.  The basis of the parameter space is indexed by `(Ω,j)` with `1
+≤  j ≤ e_Ω` and  the `Ω` are in  the same order as in hyperplane_orbits(W).
+The  first  entry  `[0,0,…,0]`  is  for  the zero-"hyperplane", which means
+generic parameters. The optional arguments are for printing characternames:
+with  `names=false` (default), the indices as in the character table of `W`
+are returned.
+
+From  the  above  data  we  can  obtain  the  rouquier  blocks at arbitrary
+parameters.  Below  we  create  a  1-cyclotomic specialization of the Hecke
+algebra  for  the  parameter  `[1,0,-1]`,  which  lies (generically) on the
+essential hyperplane `[1,-2,1]`. To this end, we need to specify a variable
+`x`.
+
+```julia-repl`
+julia> @Mvp x
+Mvp{Int64}: x
+
+# 1-cyclotomic Hecke algebra at [1,0,-1]
+julia> H = hecke(W,[ [E(3)^0 * x^1, E(3)^1 * x^0, E(3)^2 * x^(-1)] ])
+hecke(G₄,Vector{Mvp{Cyc{Int64}, Int64}}[[x, ζ₃, ζ₃²x⁻¹]])
+
+julia> rouquier_blocks(H ; names=true, limit=true)
+5-element Vector{Vector{String}}:
+ ["φ₁‚₀"]
+ ["φ₁‚₄", "φ₂‚₃", "φ₃‚₂"]
+ ["φ₁‚₈"]
+ ["φ₂‚₅"]
+ ["φ₂‚₁"]
+```
+## References
+1. Chlouveraki, M. (2009). *Blocks and families for cyclotomic Hecke algebras*. Springer-Verlag, Berlin. https://arxiv.org/abs/0807.1476
+2. Bonnafé, C. & Rouquier, R. (2017). *Cherednik algebras and Calogero-Moser cells*. [https://arxiv.org/abs/1708.09764](https://arxiv.org/abs/1708.09764)
 """
 module RouquierBlocks
 using Gapjm
@@ -37,18 +103,17 @@ end
 
 ispInt(c::Cyc,p::Integer)=mod(denominator(c),p)!=0
 ispInt(c::Mvp,p::Integer)=all(x->ispInt(x,p),coefficients(c))
-ispInt(c::Unknown,p::Integer)=true
+ispInt(c::Missing,p::Integer)=true
 
 """
-    function generic_schur_elements(W::ComplexReflectionGroup)
+`generic_schur_elements(W::ComplexReflectionGroup)`
 
-generic_schur_elements(W)  returns  the  Schur  elements for Hecke(W) with
-parameters  ζₑⁱ xⱼ,ᵢ (a variant of  the generic algebra which specializes
-to  the group  algebra for  xᵢ,ⱼ->1). The  result is  a named  tuple with
-fields  .coeff, .mon representing the leading monomial, and a field .vcyc
-which  is a list  of namedtuples with  fields .coeff, .mon representing a
-monomial  m  and  a  field  .pol  holding  a  cycpol such that the record
-represents pol(m)
+returns  the  Schur  elements  for  Hecke(W)  with  parameters `ζₑⁱxⱼ,ᵢ` (a
+variant  of the generic algebra which  specializes to the group algebra for
+`xᵢ,ⱼ->1`).  The  result  is  a  `NamedTuple`  with fields `.coeff`, `.mon`
+representing  the leading monomial, and a field  `.vcyc` which is a list of
+`NamedTuples`  with fields `.coeff`, `.mon` representing a monomial `m` and
+a field `.pol` holding a `CycPol` such that the record represents `pol(m)`.
 """
 function generic_schur_elements(W::ComplexReflectionGroup)
   vars="xyz" # for irreducible groups at most 3 orbits
@@ -73,7 +138,7 @@ function generic_schur_elements(W::ComplexReflectionGroup)
 end
 
 """
-    function rouquier_blocks(W::ComplexReflectionGroup)
+`rouquier_blocks(W::ComplexReflectionGroup;names=false)`
 
 returns  a list of [essential hyperplane h, corresponding h-blocks] for the
 complex reflection group `W`.
@@ -108,11 +173,11 @@ function rouquier_blocks(W::ComplexReflectionGroup ; names=false, namesargs...)
     end
     sort!(para,by=x->sum(x.*x)) # increasing "complexity"
 # para holds NRPARA random lists of mᵢ,ⱼ defining each a possible A_h
-    aA=gcd_partitions(map(p->collectby(i->2*sch[i].mon*p+
-           sum(x->x.mon*p*degree(x.pol),sch[i].vcyc),1:length(sch)), para)...)
+    aA=gcd_partitions(map(p->collectby(i->2*sum(sch[i].mon.*p)+
+      sum(x->sum(x.mon.*p)*degree(x.pol),sch[i].vcyc),1:length(sch)), para)...)
 # aA holds the (a+A)-blocks common to all NRPARA possible A_h
     para=para[1] # choose now the first A_h with "simplest" parameters
-    c=map(s->s.coeff*prod(r->iszero(para*r.mon) ? r.pol(r.coeff) : 1,s.vcyc),
+    c=map(s->s.coeff*prod(r->iszero(sum(para.*r.mon)) ? r.pol(r.coeff) : 1,s.vcyc),
           sch)
 # c holds the leading coefficients of the Schur elements of A_h
 #
@@ -185,7 +250,7 @@ function rouquier_blocks(W::ComplexReflectionGroup ; names=false, namesargs...)
 #         InfoChevie(" Value:", Stime(), " ")
           ct=permutedims(CharTable(Ah).irr[bl,:])
           ct=ct[sortperm(classinfo(W)[:classtext],by=x->-length(x)),:]
-          nct=count(r->!any(u->u isa Unknown,r),eachrow(ct))
+          nct=count(r->!any(ismissing,r),eachrow(ct))
           if nct!=nconjugacy_classes(W)
            xprintln("\n!! Unreliable computation: CharTable($Ah) partially unknown")
           end
