@@ -30,12 +30,12 @@ julia> using Pkg
 julia> Pkg.add(url="https://github.com/jmichel7/RouquierBlocks.jl")
 ```
 
-This package requires [Gapjm.jl](https://github.com/jmichel7/Gapjm.jl).
+This package requires [Chevie.jl](https://github.com/jmichel7/Chevie.jl).
 
 ## Usage
 
 ```julia-repl
-julia> using RouquierBlocks, Gapjm
+julia> using RouquierBlocks, Chevie
 
 julia> W = complex_reflection_group(4)
 G₄
@@ -87,7 +87,7 @@ julia> rouquier_blocks(H ; names=true, limit=true)
 2. Bonnafé, C. & Rouquier, R. (2017). *Cherednik algebras and Calogero-Moser cells*. [https://arxiv.org/abs/1708.09764](https://arxiv.org/abs/1708.09764)
 """
 module RouquierBlocks
-using Gapjm
+using Chevie
 export rouquier_blocks, rouquier_blocks, generic_schur_elements
 
 # largest v∈ ℤ such that p^-v c is a p-algebraic integer.

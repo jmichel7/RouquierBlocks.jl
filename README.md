@@ -11,12 +11,12 @@ julia> using Pkg
 julia> Pkg.add(url="https://github.com/jmichel7/RouquierBlocks.jl")
 ```
 
-This packages requires [Gapjm.jl](https://github.com/jmichel7/Gapjm.jl).
+This packages requires [Chevie.jl](https://github.com/jmichel7/Chevie.jl).
 
 ## Usage
 
 ```julia
-julia> using RouquierBlocks, Gapjm
+julia> using RouquierBlocks, Chevie
 
 # Complex reflection group G4
 julia> W = complex_reflection_group(4)
